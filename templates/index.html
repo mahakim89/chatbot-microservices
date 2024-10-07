@@ -34,16 +34,24 @@
           $("#chat-area").append("<div>User: " + userInput + "</div>");
           $("#user-input").val("");
 
-          $.post(
-            "/chat",
-            JSON.stringify({ message: userInput }),
-            function (data) {
+          $.ajax({
+            type: "POST",
+            url: "/chat",
+            data: JSON.stringify({ message: userInput }),
+            contentType: "application/json",
+            success: function (data) {
               $("#chat-area").append("<div>Bot: " + data.response + "</div>");
-            }
-          ).fail(function () {
-            $("#chat-area").append(
-              "<div>Bot: Sorry, there was an error.</div>"
-            );
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              console.log("Error:", jqXHR.responseJSON);
+              addMessage(
+                "Bot",
+                "Error: " +
+                  (jqXHR.responseJSON
+                    ? jqXHR.responseJSON.error
+                    : "Unknown error occurred")
+              );
+            },
           });
         });
       });
