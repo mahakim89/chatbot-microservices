@@ -9,30 +9,181 @@
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    />
+    <style>
+      /* Add the provided CSS here */
+      #chat1 .form-outline .form-control ~ .form-notch div {
+        pointer-events: none;
+        border: 1px solid;
+        border-color: #eee;
+        box-sizing: border-box;
+        background: transparent;
+      }
+
+      #chat1 .form-outline .form-control ~ .form-notch .form-notch-leading {
+        left: 0;
+        top: 0;
+        height: 100%;
+        border-right: none;
+        border-radius: 0.65rem 0 0 0.65rem;
+      }
+
+      #chat1 .form-outline .form-control ~ .form-notch .form-notch-middle {
+        flex: 0 0 auto;
+        max-width: calc(100% - 1rem);
+        height: 100%;
+        border-right: none;
+        border-left: none;
+      }
+
+      #chat1 .form-outline .form-control ~ .form-notch .form-notch-trailing {
+        flex-grow: 1;
+        height: 100%;
+        border-left: none;
+        border-radius: 0 0.65rem 0.65rem 0;
+      }
+
+      #chat1
+        .form-outline
+        .form-control:focus
+        ~ .form-notch
+        .form-notch-leading {
+        border-top: 0.125rem solid #39c0ed;
+        border-bottom: 0.125rem solid #39c0ed;
+        border-left: 0.125rem solid #39c0ed;
+      }
+
+      #chat1
+        .form-outline
+        .form-control:focus
+        ~ .form-notch
+        .form-notch-leading,
+      #chat1
+        .form-outline
+        .form-control.active
+        ~ .form-notch
+        .form-notch-leading {
+        border-right: none;
+        transition: all 0.2s linear;
+      }
+
+      #chat1
+        .form-outline
+        .form-control:focus
+        ~ .form-notch
+        .form-notch-middle {
+        border-bottom: 0.125rem solid;
+        border-color: #39c0ed;
+      }
+
+      #chat1 .form-outline .form-control:focus ~ .form-notch .form-notch-middle,
+      #chat1
+        .form-outline
+        .form-control.active
+        ~ .form-notch
+        .form-notch-middle {
+        border-top: none;
+        border-right: none;
+        border-left: none;
+        transition: all 0.2s linear;
+      }
+
+      #chat1
+        .form-outline
+        .form-control:focus
+        ~ .form-notch
+        .form-notch-trailing {
+        border-top: 0.125rem solid #39c0ed;
+        border-bottom: 0.125rem solid #39c0ed;
+        border-right: 0.125rem solid #39c0ed;
+      }
+
+      #chat1
+        .form-outline
+        .form-control:focus
+        ~ .form-notch
+        .form-notch-trailing,
+      #chat1
+        .form-outline
+        .form-control.active
+        ~ .form-notch
+        .form-notch-trailing {
+        border-left: none;
+        transition: all 0.2s linear;
+      }
+
+      #chat1 .form-outline .form-control:focus ~ .form-label {
+        color: #39c0ed;
+      }
+
+      #chat1 .form-outline .form-control ~ .form-label {
+        color: #bfbfbf;
+      }
+
+      /* Typing indicator styles */
+      .typing-indicator {
+        display: none;
+        margin: 10px 0;
+        font-style: italic;
+        color: #aaa;
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <h1>Chatbot</h1>
-      <div
-        id="chat-area"
-        class="border p-3"
-        style="height: 300px; overflow-y: scroll"
-      ></div>
-      <input
-        type="text"
-        id="user-input"
-        class="form-control"
-        placeholder="Type your message here..."
-      />
-      <button id="send-btn" class="btn btn-primary mt-2">Send</button>
-    </div>
+    <section>
+      <div class="container py-5">
+        <div class="row d-flex justify-content-center">
+          <div class="col-md-8 col-lg-6 col-xl-4">
+            <div class="card" id="chat1" style="border-radius: 15px">
+              <div
+                class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0"
+                style="
+                  border-top-left-radius: 15px;
+                  border-top-right-radius: 15px;
+                "
+              >
+                <i class="fas fa-angle-left"></i>
+                <p class="mb-0 fw-bold">Live chat</p>
+                <i class="fas fa-times"></i>
+              </div>
+              <div class="card-body">
+                <div
+                  id="chat-area"
+                  style="height: 300px; overflow-y: scroll"
+                ></div>
+                <div class="typing-indicator" id="typing-indicator">
+                  Bot is typing...
+                </div>
+                <div class="form-outline">
+                  <textarea
+                    class="form-control bg-body-tertiary"
+                    id="user-input"
+                    rows="4"
+                  ></textarea>
+                  <label class="form-label" for="user-input"
+                    >Type your message</label
+                  >
+                </div>
+                <button id="send-btn" class="btn btn-primary mt-2">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <script>
       $(document).ready(function () {
         $("#send-btn").click(function () {
           const userInput = $("#user-input").val();
-          $("#chat-area").append("<div>User: " + userInput + "</div>");
+          addMessage("User", userInput);
           $("#user-input").val("");
+
+          // Show typing indicator
+          $("#typing-indicator").show();
 
           $.ajax({
             type: "POST",
@@ -40,9 +191,13 @@
             data: JSON.stringify({ message: userInput }),
             contentType: "application/json",
             success: function (data) {
-              $("#chat-area").append("<div>Bot: " + data.response + "</div>");
+              // Hide typing indicator
+              $("#typing-indicator").hide();
+              addMessage("Bot", data.response);
             },
             error: function (jqXHR, textStatus, errorThrown) {
+              // Hide typing indicator
+              $("#typing-indicator").hide();
               console.log("Error:", jqXHR.responseJSON);
               addMessage(
                 "Bot",
@@ -54,6 +209,38 @@
             },
           });
         });
+
+        function addMessage(sender, message) {
+          const isUser = sender === "User";
+          const avatarSrc = isUser
+            ? "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava2-bg.webp"
+            : "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp";
+          const justifyContent = isUser ? "end" : "start";
+          const bgColor = isUser ? "bg-body-tertiary" : "rgba(57, 192, 237,.2)";
+
+          const messageHtml = `
+            <div class="d-flex flex-row justify-content-${justifyContent} mb-4">
+              ${
+                !isUser
+                  ? `<img src="${avatarSrc}" alt="avatar" style="width: 45px; height: 100%;">`
+                  : ""
+              }
+              <div class="p-3 ms-3 ${
+                isUser ? "me-3 border" : ""
+              }" style="border-radius: 15px; background-color: ${bgColor};">
+                <p class="small mb-0">${message}</p>
+              </div>
+              ${
+                isUser
+                  ? `<img src="${avatarSrc}" alt="avatar" style="width: 45px; height: 100%;">`
+                  : ""
+              }
+            </div>
+          `;
+
+          $("#chat-area").append(messageHtml);
+          $("#chat-area").scrollTop($("#chat-area")[0].scrollHeight);
+        }
       });
     </script>
   </body>
