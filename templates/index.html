@@ -130,6 +130,134 @@
         font-style: italic;
         color: #aaa;
       }
+
+      /* Enhance chat bubbles */
+      .message-bubble {
+        max-width: 80%;
+        margin: 10px;
+        padding: 15px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Improve chat container */
+      #chat-area {
+        height: 400px; /* Increased height */
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      /* Better typing indicator */
+      .typing-indicator {
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 20px;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.5;
+        }
+      }
+
+      /* Enhance input area */
+      .form-outline textarea {
+        border-radius: 20px;
+        padding: 15px;
+        resize: none;
+      }
+
+      #send-btn {
+        border-radius: 50px;
+        padding: 10px 30px;
+        transition: all 0.3s ease;
+      }
+
+      /* Add these styles to the existing <style> section */
+      :root {
+        --primary-color: #0d6efd;
+        --chat-bg: #f8f9fa;
+        --message-bg: #fff;
+        --message-text: #212529;
+      }
+
+      .card {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: none;
+      }
+
+      .card-header {
+        background: linear-gradient(45deg, var(--primary-color), #0dcaf0);
+        color: white;
+        padding: 1rem;
+      }
+
+      #chat-area {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+      }
+
+      #chat-area::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #chat-area::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+
+      .message-bubble {
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .message-bubble:hover {
+        transform: translateY(-2px);
+      }
+
+      .user-message .message-bubble {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .bot-message .message-bubble {
+        background: var(--message-bg);
+        color: var(--message-text);
+      }
+
+      #send-btn {
+        background: var(--primary-color);
+        border: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      #send-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 0;
+        }
+
+        .card {
+          height: 100vh;
+          border-radius: 0;
+        }
+
+        #chat-area {
+          height: calc(100vh - 200px);
+        }
+      }
     </style>
   </head>
   <body>
@@ -137,19 +265,34 @@
       <div class="container py-5">
         <div class="row d-flex justify-content-center">
           <div class="col-md-8 col-lg-6 col-xl-4">
-            <div class="card" id="chat1" style="border-radius: 15px">
+            <div
+              class="card"
+              id="chat1"
+              style="border-radius: 15px; max-width: 800px; margin: auto"
+            >
               <div
-                class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0"
-                style="
-                  border-top-left-radius: 15px;
-                  border-top-right-radius: 15px;
-                "
+                class="card-header d-flex justify-content-between align-items-center"
               >
-                <i class="fas fa-angle-left"></i>
-                <p class="mb-0 fw-bold">Live chat</p>
-                <i class="fas fa-times"></i>
+                <div class="d-flex align-items-center">
+                  <img
+                    src="/static/bot-avatar.png"
+                    alt="bot"
+                    class="rounded-circle me-2"
+                    style="width: 40px; height: 40px"
+                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect width=%2240%22 height=%2240%22 fill=%22%23ccc%22/></svg>'"
+                  />
+                  <div>
+                    <h6 class="mb-0">AI Assistant</h6>
+                    <small class="text-muted">Online</small>
+                  </div>
+                </div>
+                <div>
+                  <button class="btn btn-link text-dark">
+                    <i class="fas fa-cog"></i>
+                  </button>
+                </div>
               </div>
-              <div class="card-body">
+              <div class="card-body p-4">
                 <div
                   id="chat-area"
                   style="height: 300px; overflow-y: scroll"
@@ -185,18 +328,24 @@
           // Show typing indicator
           $("#typing-indicator").show();
 
+          let loadingAnimation;
           $.ajax({
             type: "POST",
             url: "/chat",
             data: JSON.stringify({ message: userInput }),
             contentType: "application/json",
+            beforeSend: function () {
+              loadingAnimation = showLoadingAnimation();
+            },
             success: function (data) {
               // Hide typing indicator
+              clearInterval(loadingAnimation);
               $("#typing-indicator").hide();
               addMessage("Bot", data.response);
             },
             error: function (jqXHR, textStatus, errorThrown) {
               // Hide typing indicator
+              clearInterval(loadingAnimation);
               $("#typing-indicator").hide();
               console.log("Error:", jqXHR.responseJSON);
               addMessage(
@@ -207,39 +356,52 @@
                     : "Unknown error occurred")
               );
             },
+            complete: function () {
+              clearInterval(loadingAnimation);
+              $("#typing-indicator").hide();
+            },
           });
         });
 
         function addMessage(sender, message) {
           const isUser = sender === "User";
-          const avatarSrc = isUser
-            ? "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava2-bg.webp"
-            : "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava1-bg.webp";
-          const justifyContent = isUser ? "end" : "start";
-          const bgColor = isUser ? "bg-body-tertiary" : "rgba(57, 192, 237,.2)";
-
           const messageHtml = `
-            <div class="d-flex flex-row justify-content-${justifyContent} mb-4">
+            <div class="d-flex flex-row justify-content-${
+              isUser ? "end" : "start"
+            } mb-4">
               ${
                 !isUser
-                  ? `<img src="${avatarSrc}" alt="avatar" style="width: 45px; height: 100%;">`
+                  ? `<img src="/static/bot-avatar.png" alt="bot" class="rounded-circle me-2" style="width: 40px; height: 40px;">`
                   : ""
               }
-              <div class="p-3 ms-3 ${
-                isUser ? "me-3 border" : ""
-              }" style="border-radius: 15px; background-color: ${bgColor};">
-                <p class="small mb-0">${message}</p>
+              <div class="message-bubble ${
+                isUser ? "bg-primary text-white" : "bg-white"
+              }">
+                <p class="mb-0">${message}</p>
+                <small class="text-${
+                  isUser ? "light" : "muted"
+                } d-block mt-1">${new Date().toLocaleTimeString()}</small>
               </div>
               ${
                 isUser
-                  ? `<img src="${avatarSrc}" alt="avatar" style="width: 45px; height: 100%;">`
+                  ? `<img src="/static/user-avatar.png" alt="user" class="rounded-circle ms-2" style="width: 40px; height: 40px;">`
                   : ""
               }
             </div>
           `;
-
           $("#chat-area").append(messageHtml);
           $("#chat-area").scrollTop($("#chat-area")[0].scrollHeight);
+        }
+
+        // Add this loading animation function
+        function showLoadingAnimation() {
+          const dots = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+          let i = 0;
+
+          return setInterval(() => {
+            $("#typing-indicator").text(`Bot is thinking ${dots[i]} `);
+            i = (i + 1) % dots.length;
+          }, 80);
         }
       });
     </script>
