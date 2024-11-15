@@ -258,6 +258,48 @@
           height: calc(100vh - 200px);
         }
       }
+
+      /* Add dark theme styles */
+      .dark-theme {
+        --chat-bg: #2d2d2d;
+        --message-bg: #3d3d3d;
+        --message-text: #ffffff;
+      }
+
+      /* Add to your existing CSS */
+      body,
+      .card,
+      .message-bubble {
+        transition: all 0.3s ease;
+      }
+
+      .dark-theme {
+        background-color: #1a1a1a;
+        color: #ffffff;
+      }
+
+      .dark-theme .card {
+        background-color: #2d2d2d;
+      }
+
+      .dark-theme .form-control {
+        background-color: #3d3d3d;
+        color: #ffffff;
+        border-color: #4d4d4d;
+      }
+
+      .dark-theme .modal-content {
+        background-color: #2d2d2d;
+        color: #ffffff;
+      }
+
+      .dark-theme .modal-header {
+        border-bottom-color: #4d4d4d;
+      }
+
+      .dark-theme .modal-footer {
+        border-top-color: #4d4d4d;
+      }
     </style>
   </head>
   <body>
@@ -287,7 +329,11 @@
                   </div>
                 </div>
                 <div>
-                  <button class="btn btn-link text-dark">
+                  <button
+                    class="btn btn-link text-light"
+                    data-toggle="modal"
+                    data-target="#settingsModal"
+                  >
                     <i class="fas fa-cog"></i>
                   </button>
                 </div>
@@ -317,6 +363,44 @@
         </div>
       </div>
     </section>
+
+    <!-- Add this modal HTML after the main card div -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Chat Settings</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Theme</label>
+              <select class="form-control" id="themeSelect">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Font Size</label>
+              <input
+                type="range"
+                class="form-control-range"
+                id="fontSize"
+                min="12"
+                max="20"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
       $(document).ready(function () {
@@ -404,6 +488,83 @@
           }, 80);
         }
       });
+
+      // Add this JavaScript after the existing $(document).ready function
+      $(document).ready(function () {
+        // Theme handling
+        $("#themeSelect").change(function () {
+          const theme = $(this).val();
+          if (theme === "dark") {
+            $("body").addClass("dark-theme");
+            $(".card").css("background-color", "#1a1a1a");
+            $(".message-bubble:not(.bg-primary)").css(
+              "background-color",
+              "#2d2d2d"
+            );
+            $(".message-bubble:not(.bg-primary)").css("color", "#ffffff");
+          } else {
+            $("body").removeClass("dark-theme");
+            $(".card").css("background-color", "#ffffff");
+            $(".message-bubble:not(.bg-primary)").css(
+              "background-color",
+              "#f8f9fa"
+            );
+            $(".message-bubble:not(.bg-primary)").css("color", "#212529");
+          }
+          // Save theme preference
+          localStorage.setItem("chatTheme", theme);
+        });
+
+        // Font size handling
+        $("#fontSize").change(function () {
+          const size = $(this).val();
+          $("#chat-area").css("font-size", size + "px");
+          $(".message-bubble").css("font-size", size + "px");
+          // Save font size preference
+          localStorage.setItem("chatFontSize", size);
+        });
+
+        // Load saved preferences
+        const savedTheme = localStorage.getItem("chatTheme");
+        const savedFontSize = localStorage.getItem("chatFontSize");
+
+        if (savedTheme) {
+          $("#themeSelect").val(savedTheme).trigger("change");
+        }
+        if (savedFontSize) {
+          $("#fontSize").val(savedFontSize).trigger("change");
+        }
+
+        // Add a close button to the modal
+        $(".modal-footer").html(`
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Save changes</button>
+        `);
+      });
+
+      // Add this JavaScript
+      $(document).ready(function () {
+        // Update gear icon click handler
+        $(".fa-cog")
+          .parent()
+          .click(function () {
+            $("#settingsModal").modal("show");
+          });
+
+        // Handle settings changes
+        $("#themeSelect").change(function () {
+          const theme = $(this).val();
+          $("body").toggleClass("dark-theme", theme === "dark");
+        });
+
+        $("#fontSize").change(function () {
+          const size = $(this).val();
+          $("#chat-area").css("font-size", size + "px");
+        });
+      });
     </script>
+    <!-- Add these before the closing </body> tag -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </body>
 </html>
