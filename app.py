@@ -26,11 +26,13 @@ def index():
 @app.route("/chat", methods=["POST"])
 def chat():
     user_input = request.json.get("message")
+    model = request.json.get("model", OPENAI_MODEL)  # Use provided model or default
+
     if not user_input:
         return jsonify({"error": "No message provided"}), 400
 
     try:
-        logging.info(f"Sending request with model: {OPENAI_MODEL}")
+        logging.info(f"Sending request with model: {model}")
         response = requests.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
@@ -38,7 +40,7 @@ def chat():
                 "Content-Type": "application/json",
             },
             json={
-                "model": OPENAI_MODEL,  # Use the constant defined above
+                "model": model,
                 "messages": [{"role": "user", "content": user_input}],
             },
         )
