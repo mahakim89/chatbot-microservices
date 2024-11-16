@@ -404,31 +404,31 @@
 
     <script>
       $(document).ready(function () {
-        $("#send-btn").click(function () {
-          const userInput = $("#user-input").val();
+        // Combined message sending function
+        function sendMessage(userInput) {
+          // First verify we have input
+          if (!userInput || userInput.trim() === "") {
+            return;
+          }
+
           addMessage("User", userInput);
           $("#user-input").val("");
 
           // Show typing indicator
           $("#typing-indicator").show();
+          let loadingAnimation = showLoadingAnimation();
 
-          let loadingAnimation;
           $.ajax({
             type: "POST",
             url: "/chat",
-            data: JSON.stringify({ message: userInput }),
-            contentType: "application/json",
-            beforeSend: function () {
-              loadingAnimation = showLoadingAnimation();
-            },
+            data: JSON.stringify({ message: userInput.trim() }), // Make sure message is properly set
+            contentType: "application/json", // Important!
             success: function (data) {
-              // Hide typing indicator
               clearInterval(loadingAnimation);
               $("#typing-indicator").hide();
               addMessage("Bot", data.response);
             },
-            error: function (jqXHR, textStatus, errorThrown) {
-              // Hide typing indicator
+            error: function (jqXHR) {
               clearInterval(loadingAnimation);
               $("#typing-indicator").hide();
               console.log("Error:", jqXHR.responseJSON);
@@ -440,11 +440,18 @@
                     : "Unknown error occurred")
               );
             },
-            complete: function () {
-              clearInterval(loadingAnimation);
-              $("#typing-indicator").hide();
-            },
           });
+        }
+
+        // Handle Send button click
+        $("#send-btn").click(sendMessage);
+
+        // Handle Enter key press
+        $("#user-input").keypress(function (e) {
+          if (e.which === 13 && !e.shiftKey) {
+            e.preventDefault(); // Prevent default newline
+            sendMessage();
+          }
         });
 
         function addMessage(sender, message) {
@@ -487,10 +494,7 @@
             i = (i + 1) % dots.length;
           }, 80);
         }
-      });
 
-      // Add this JavaScript after the existing $(document).ready function
-      $(document).ready(function () {
         // Theme handling
         $("#themeSelect").change(function () {
           const theme = $(this).val();
@@ -540,10 +544,7 @@
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" data-dismiss="modal">Save changes</button>
         `);
-      });
 
-      // Add this JavaScript
-      $(document).ready(function () {
         // Update gear icon click handler
         $(".fa-cog")
           .parent()
@@ -561,6 +562,66 @@
           const size = $(this).val();
           $("#chat-area").css("font-size", size + "px");
         });
+
+        let typingTimer;
+        const doneTypingInterval = 1000; // waiting time after user stops typing (in ms)
+
+        $("#user-input").on("input", function () {
+          clearTimeout(typingTimer);
+          const userInput = $(this).val().trim();
+
+          if (userInput) {
+            typingTimer = setTimeout(function () {
+              sendMessage(userInput);
+            }, doneTypingInterval);
+          }
+        });
+
+        // Also add a click handler for the send button
+        $("#send-btn").click(function () {
+          const userInput = $("#user-input").val().trim();
+          if (userInput) {
+            sendMessage(userInput);
+          }
+        });
+
+        function sendMessage(userInput) {
+          // First verify we have input
+          if (!userInput || userInput.trim() === "") {
+            return;
+          }
+
+          addMessage("User", userInput);
+          $("#user-input").val("");
+
+          // Show typing indicator
+          $("#typing-indicator").show();
+          let loadingAnimation = showLoadingAnimation();
+
+          $.ajax({
+            type: "POST",
+            url: "/chat",
+            data: JSON.stringify({ message: userInput.trim() }), // Make sure message is properly set
+            contentType: "application/json", // Important!
+            success: function (data) {
+              clearInterval(loadingAnimation);
+              $("#typing-indicator").hide();
+              addMessage("Bot", data.response);
+            },
+            error: function (jqXHR) {
+              clearInterval(loadingAnimation);
+              $("#typing-indicator").hide();
+              console.log("Error:", jqXHR.responseJSON);
+              addMessage(
+                "Bot",
+                "Error: " +
+                  (jqXHR.responseJSON
+                    ? jqXHR.responseJSON.error
+                    : "Unknown error occurred")
+              );
+            },
+          });
+        }
       });
     </script>
     <!-- Add these before the closing </body> tag -->
