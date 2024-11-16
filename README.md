@@ -35,9 +35,8 @@ A modern, responsive chat interface built with Flask, jQuery, and Bootstrap that
 
 ## Installation
 
-1. Clone the repository
-
 ```bash
+1. Clone the repository
 git clone https://github.com/mahakim89/chatbot-microservices.git
 cd chatbot-microservices
 
